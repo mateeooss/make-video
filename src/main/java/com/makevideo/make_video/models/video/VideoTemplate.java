@@ -1,5 +1,6 @@
 package com.makevideo.make_video.models.video;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import lombok.Setter;
 public abstract class VideoTemplate {
     String title;
 
-    public VideoTemplate(String title) { this.title = title; }
+    public VideoTemplate(@JsonProperty("title") String title) { this.title = title; }
     public abstract void start();
     public abstract void renderVideo();
     public abstract void sendVideo();

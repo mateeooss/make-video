@@ -28,7 +28,7 @@ public class JacksonConfig {
 
         // Registrar dinamicamente os subtipos
         for (Class<? extends VideoTemplate> subType : subTypes) {
-            String typeName = subType.getSimpleName().toLowerCase();  // Usando o nome da classe como nome do tipo
+            String typeName = subType.getSimpleName();  // Usando o nome da classe como nome do tipo
             module.registerSubtypes(new NamedType(subType, typeName));
         }
 
