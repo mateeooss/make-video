@@ -4,6 +4,15 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Ignorar arquivos de configuração sensíveis
+src/main/resources/application.properties
+src/main/resources/*.env
+
+# Ignorar outros arquivos sensíveis (exemplo: chaves privadas)
+*.key
+*.pem
+.env
+
 ### STS ###
 .apt_generated
 .classpath

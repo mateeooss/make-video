@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum VideoType {
-    VIDEO_WITH_IMAGES("videowithimages");
+    VIDEO_WITH_IMAGES("VideoWithImages");
 
     String className;
 

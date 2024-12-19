@@ -21,6 +21,7 @@ public class MakeVideoApplication {
 //		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 //	}
 	public static void main(String[] args) {
+		SpringApplication.run(MakeVideoApplication.class, args);
 		// Configuração básica do vídeo
 //		String outputFile = "output.avi";
 //		int width = 640;
@@ -62,8 +63,4 @@ public class MakeVideoApplication {
 //		videoWriter.release();
 //		System.out.println("Vídeo criado: " + outputFile);
 //	}
-
-		SpringApplication.run(MakeVideoApplication.class, args);
-
-
 }}
