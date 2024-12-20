@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 @Service
 public class SentenceService {
-    public void processText(String text) throws IOException {
+    public List<String> processText(String text) throws IOException {
         // Carregar o modelo de detecção de sentenças em português
         SentenceModel sentenceModel = new SentenceModel(new FileInputStream("src/main/resources/setence-model/opennlp-pt-ud-gsd-sentence-1.2-2.5.0.bin"));
         SentenceDetectorME sentenceDetector = new SentenceDetectorME(sentenceModel);
@@ -27,5 +29,7 @@ public class SentenceService {
         for (String sentence : sentences) {
             System.out.println(sentence);
         }
+
+        return List.of(sentences);
     }
 }

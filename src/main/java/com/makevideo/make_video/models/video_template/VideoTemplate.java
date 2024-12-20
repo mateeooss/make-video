@@ -1,8 +1,7 @@
-package com.makevideo.make_video.models.video;
+package com.makevideo.make_video.models.video_template;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

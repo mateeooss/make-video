@@ -1,11 +1,4 @@
-package com.makevideo.make_video.models.OpenAiMessage;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+package com.makevideo.make_video.models.openAiMessage;
 
 public class OpenAiMessage {
     private String role;

@@ -1,6 +1,5 @@
-package com.makevideo.make_video.models.OpenAiMessage;
+package com.makevideo.make_video.models.openAiMessage;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;

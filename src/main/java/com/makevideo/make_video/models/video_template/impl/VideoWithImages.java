@@ -1,9 +1,9 @@
-package com.makevideo.make_video.models.video.impl;
+package com.makevideo.make_video.models.video_template.impl;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.makevideo.make_video.models.video.VideoTemplate;
-import com.makevideo.make_video.models.video.sentences.Sentences;
+import com.makevideo.make_video.enums.LanguagesEnum;
+import com.makevideo.make_video.models.video_template.VideoTemplate;
+import com.makevideo.make_video.models.sentences.Sentences;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,6 +19,8 @@ public class VideoWithImages extends VideoTemplate {
     private String sourceContentOriginal;
     private String sourceContentSanitized;
     private List<Sentences> sentences;
+    private LanguagesEnum language;
+    private List<LanguagesEnum> AdditionalLanguages;
 
     public VideoWithImages(@JsonProperty("title") String title) {
         super(title);

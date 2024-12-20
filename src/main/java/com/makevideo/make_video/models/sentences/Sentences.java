@@ -1,4 +1,4 @@
-package com.makevideo.make_video.models.video.sentences;
+package com.makevideo.make_video.models.sentences;
 
 public class Sentences {
     private String text;

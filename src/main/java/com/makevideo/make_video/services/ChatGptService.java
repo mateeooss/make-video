@@ -2,7 +2,7 @@ package com.makevideo.make_video.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.makevideo.make_video.models.OpenAiMessage.OpenAiMessageRequest;
+import com.makevideo.make_video.models.openAiMessage.OpenAiMessageRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

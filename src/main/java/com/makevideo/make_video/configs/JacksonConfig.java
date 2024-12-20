@@ -3,7 +3,7 @@ package com.makevideo.make_video.configs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.makevideo.make_video.models.video.VideoTemplate;
+import com.makevideo.make_video.models.video_template.VideoTemplate;
 import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
