@@ -2,6 +2,7 @@ package com.makevideo.make_video.controllers;
 
 import com.makevideo.make_video.models.video_template.VideoTemplate;
 import com.makevideo.make_video.services.ChatGptService;
+import com.makevideo.make_video.services.KeywordExtractorService;
 import com.makevideo.make_video.services.SentenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,13 +20,15 @@ public class VideoController {
     private ChatGptService chatGptService;
     @Autowired
     private SentenceService sentenceService;
+    @Autowired
+    private KeywordExtractorService extractorService;
 
     @PostMapping()
     public String createVideo(@RequestBody VideoTemplate teste) throws IOException {
 //        var openAiMessage = new OpenAiMessage("user", "boa tarde");
 //        OpenAiMessageRequest messageRequest = new OpenAiMessageRequest("", Arrays.asList(openAiMessage));
 //        return chatGptService.sendMessage(messageRequest);
-        sentenceService.processText("O Apache OpenNLP, é uma biblioteca de processamento de linguagem natural. Ele oferece várias ferramentas de NLP.");
+        extractorService.getKeyWords("oi, sou Michael Jackson e gosto de fazer o movimento de dança moonwalk");
         return "";
     }
 }

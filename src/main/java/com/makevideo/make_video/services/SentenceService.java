@@ -1,35 +1,40 @@
 package com.makevideo.make_video.services;
 
 
+import com.makevideo.make_video.exception.SentenceModelException;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 @Service
 public class SentenceService {
-    public List<String> processText(String text) throws IOException {
-        // Carregar o modelo de detecção de sentenças em português
-        SentenceModel sentenceModel = new SentenceModel(new FileInputStream("src/main/resources/setence-model/opennlp-pt-ud-gsd-sentence-1.2-2.5.0.bin"));
-        SentenceDetectorME sentenceDetector = new SentenceDetectorME(sentenceModel);
 
-        // Detectar as sentenças
+    @Value("${apache.sentences}")
+    private String sentenceModelPath;
+
+    public List<String> getSentences(String text) {
+        SentenceDetectorME sentenceDetector = getSentenceDetector();
         String[] sentences = sentenceDetector.sentDetect(text);
 
-        // Exibir as sentenças detectadas
-        System.out.println("Sentenças detectadas:");
         for (String sentence : sentences) {
             System.out.println(sentence);
         }
 
         return List.of(sentences);
+    }
+
+    private SentenceDetectorME getSentenceDetector(){
+        try{
+            SentenceModel sentenceModel = new SentenceModel(new FileInputStream(sentenceModelPath));
+            return new SentenceDetectorME(sentenceModel);
+        } catch(IOException e){
+            throw new SentenceModelException("Erro ao carregar o modelo de Sentença em: " + sentenceModelPath, e);
+        }
+
     }
 }
