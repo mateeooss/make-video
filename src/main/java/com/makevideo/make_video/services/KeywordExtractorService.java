@@ -20,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -41,13 +42,14 @@ public class KeywordExtractorService {
     }
 
     public void getKeyWords(String text) {
+        var a = Arrays.asList(text, "aaaaaa");
         String encodedText;
         try {
             encodedText = URLEncoder.encode(text, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        ResponseEntity<String> response = restTemplate.getForEntity(pithonMicroServiceUri + "?text=" + encodedText, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(pithonMicroServiceUri, a, String.class);
 
         System.out.println("Resposta: " + response.getBody());
     }

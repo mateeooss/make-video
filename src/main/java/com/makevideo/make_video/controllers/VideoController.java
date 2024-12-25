@@ -16,19 +16,9 @@ import java.io.IOException;
 @RequestMapping("api/video")
 public class VideoController {
 
-    @Autowired
-    private ChatGptService chatGptService;
-    @Autowired
-    private SentenceService sentenceService;
-    @Autowired
-    private KeywordExtractorService extractorService;
-
     @PostMapping()
-    public String createVideo(@RequestBody VideoTemplate teste) throws IOException {
-//        var openAiMessage = new OpenAiMessage("user", "boa tarde");
-//        OpenAiMessageRequest messageRequest = new OpenAiMessageRequest("", Arrays.asList(openAiMessage));
-//        return chatGptService.sendMessage(messageRequest);
-        extractorService.getKeyWords("oi, sou Michael Jackson e gosto de fazer o movimento de dança moonwalk");
+    public String createVideo(@RequestBody VideoTemplate videoTemplate) throws IOException {
+        videoTemplate.start();
         return "";
     }
 }
