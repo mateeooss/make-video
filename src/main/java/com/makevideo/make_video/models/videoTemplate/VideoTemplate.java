@@ -1,4 +1,4 @@
-package com.makevideo.make_video.models.video_template;
+package com.makevideo.make_video.models.videoTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

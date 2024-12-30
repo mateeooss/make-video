@@ -1,10 +1,6 @@
 package com.makevideo.make_video.controllers;
 
-import com.makevideo.make_video.models.video_template.VideoTemplate;
-import com.makevideo.make_video.services.ChatGptService;
-import com.makevideo.make_video.services.KeywordExtractorService;
-import com.makevideo.make_video.services.SentenceService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.makevideo.make_video.models.videoTemplate.VideoTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
