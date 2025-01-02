@@ -1,17 +1,11 @@
 package com.makevideo.make_video.models.videoTemplate.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.makevideo.make_video.enums.ChatGptRoleEnum;
 import com.makevideo.make_video.enums.LanguagesEnum;
 import com.makevideo.make_video.factorys.ServicesFactory;
-import com.makevideo.make_video.models.chatGpt.MessageRequest;
-import com.makevideo.make_video.models.chatGpt.Request;
-import com.makevideo.make_video.models.chatGpt.Response;
 import com.makevideo.make_video.models.videoTemplate.VideoTemplate;
 import com.makevideo.make_video.models.sentences.Sentences;
-import com.makevideo.make_video.services.ChatGptService;
-import com.makevideo.make_video.services.FileHandlerService;
-import com.makevideo.make_video.services.KeywordExtractorService;
+import com.makevideo.make_video.services.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,21 +24,29 @@ public class VideoWithImages extends VideoTemplate {
     private LanguagesEnum language;
     private List<LanguagesEnum> AdditionalLanguages;
 
+    private SentenceService sentenceService;
     private ChatGptService chatGptService;
-    private KeywordExtractorService extractorService;
+    private KeywordService keywordService;
     private FileHandlerService fileHandlerService;
+    private ImageService imageService;
 
     public VideoWithImages(@JsonProperty("title") String title) {
         super(title);
-        this.chatGptService = ServicesFactory.getService(ChatGptService.class);
-        this.extractorService = ServicesFactory.getService(KeywordExtractorService.class);
-        this.fileHandlerService = ServicesFactory.getService(FileHandlerService.class);
+        sentenceService = ServicesFactory.getService(SentenceService.class);
+        chatGptService = ServicesFactory.getService(ChatGptService.class);
+        keywordService = ServicesFactory.getService(KeywordService.class);
+        fileHandlerService = ServicesFactory.getService(FileHandlerService.class);
+        imageService = ServicesFactory.getService(ImageService.class);
     }
 
     @Override
     public void start() {
-        Response response = new Response();
-        fileHandlerService.readFile("teste.txt", String.class);
+//        List<String> sentenceList = sentenceService.getSentences("Michael Jackson foi um dos artistas mais influentes e inovadores da história da música. Conhecido como o \"Rei do Pop\", ele conquistou o mundo com suas habilidades de dança, especialmente com o famoso \"moonwalk\", e sua voz única. Seu álbum Thriller é o mais vendido de todos os tempos, com sucessos como \"Billie Jean\" e \"Beat It\". Jackson também era um pioneiro em vídeos musicais, trazendo inovação com produções como \"Thriller\" e \"Smooth Criminal\". Além de sua música, ele teve um impacto significativo na cultura pop, moda e dança. Sua carreira foi marcada por grandes conquistas, mas também por controvérsias e desafios pessoais.");
+        keywordService.getKeyWords("Michael Jackson foi um dos artistas mais influentes e inovadores da história da música. Conhecido como o Rei do Pop, ele conquistou o mundo com suas habilidades de dança, especialmente com o famoso moonwalk, e sua voz única. Seu álbum Thriller é o mais vendido de todos os tempos, com sucessos como Billie Jean e Beat It. Jackson também era um pioneiro em vídeos musicais, trazendo inovação com produções como Thriller e Smooth Criminal. Além de sua música, ele teve um impacto significativo na cultura pop, moda e dança. Sua carreira foi marcada por grandes conquistas, mas também por controvérsias e desafios pessoais.");
+//        var a = imageService.searchImage();
+//        System.out.println(a);
+//        Response response = new Response();
+//        System.out.println(fileHandlerService.readFile("teste.txt", String.class));
 //        MessageRequest messageRequest = new MessageRequest(ChatGptRoleEnum.user.name(), "oi" + "bom dia");
 //        Request request = new Request(List.of(messageRequest));
 //

@@ -1,30 +1,16 @@
 package com.makevideo.make_video.services;
 
-import com.makevideo.make_video.exception.PosTaggerModelException;
-import com.makevideo.make_video.exception.TokenizationModelException;
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.tokenize.Tokenizer;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @Service
-public class KeywordExtractorService {
+public class KeywordService {
 
     @Value("${apache.tokens}")
     private String tokenModelPath;
@@ -37,7 +23,7 @@ public class KeywordExtractorService {
 
     RestTemplate restTemplate;
 
-    public KeywordExtractorService(){
+    public KeywordService(){
         restTemplate = new RestTemplate();
     }
 
