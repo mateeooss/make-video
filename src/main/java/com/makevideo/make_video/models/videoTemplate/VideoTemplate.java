@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public abstract class VideoTemplate {
     String title;
+    int durationSeg;
 
     public VideoTemplate(@JsonProperty("title") String title) { this.title = title; }
     public abstract void start();

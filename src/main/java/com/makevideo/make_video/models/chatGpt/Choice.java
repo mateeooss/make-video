@@ -9,8 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Choice {
+    @JsonProperty("index")
     private int index;
-    private MessageResp messageResp;
+    @JsonProperty("message")
+    private MessageResp message;
     @JsonProperty("finish_reason")
     private String finishReason;
 }

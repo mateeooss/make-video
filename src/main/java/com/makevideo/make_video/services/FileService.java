@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 @Service
-public class FileHandlerService {
+public class FileService {
     ObjectMapper mapper = new ObjectMapper();
 
     public <T> T readFile(String uri, Class<T> clazz){
@@ -40,8 +40,9 @@ public class FileHandlerService {
 
     public void createFile(String uri){
         try {
+            if(existFile(uri)) throw new RuntimeException("O arquivo ja existe: ");
+
             Path path = Path.of(uri);
-            if(Files.exists(path)) throw new RuntimeException("O arquivo ja existe: ");
             Files.createFile(path);
         } catch (IOException e) {
             throw new RuntimeException("erro ao escrever o arquivo no diretorio informado: " + Arrays.toString(e.getStackTrace()));
@@ -50,8 +51,17 @@ public class FileHandlerService {
         }
     }
 
-    public <T> void createAndWrite(String uri, T object){
-        this.createFile(uri);
+    public <T> void createIfNotExistAndWrite(String uri, T object){
+        if(notExistFile(uri)) this.createFile(uri);
         this.writeFile(uri, object);
+    }
+
+    public Boolean existFile(String uri){
+        Path path = Path.of(uri);
+        return Files.exists(path);
+    }
+
+    public Boolean notExistFile(String uri){
+        return !existFile(uri);
     }
 }
