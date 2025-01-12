@@ -28,4 +28,12 @@ public class Request {
     public void setModel(String model) {
         this.model = model;
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "model='" + model + '\'' +
+                ", messages=" + messages +
+                '}';
+    }
 }

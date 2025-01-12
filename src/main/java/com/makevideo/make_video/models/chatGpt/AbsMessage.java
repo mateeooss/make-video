@@ -36,4 +36,12 @@ public abstract class AbsMessage {
     public void setContent(String content) {
         this.content = content;
     }
+
+    @Override
+    public String toString() {
+        return "AbsMessage{" +
+                "role='" + role + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

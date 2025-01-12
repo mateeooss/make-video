@@ -69,4 +69,16 @@ public class  Response {
     public void setUsage(Usage usage) {
         this.usage = usage;
     }
+
+    @Override
+    public String toString() {
+        return "Response{" +
+                "id='" + id + '\'' +
+                ", object='" + object + '\'' +
+                ", created=" + created +
+                ", model='" + model + '\'' +
+                ", choices=" + choices +
+                ", usage=" + usage +
+                '}';
+    }
 }

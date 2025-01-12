@@ -9,6 +9,10 @@ public class StringUtils {
         return (text != null ? text.replaceAll(" +", " ") : "");
     }
 
+    public static String removeAllSpaces(String text){
+        return (text != null ? text.replaceAll("\\s+", "") : "");
+    }
+
     public static String sanitizeText(String text){
         if(text == null) return "";
 

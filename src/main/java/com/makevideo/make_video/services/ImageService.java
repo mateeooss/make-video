@@ -7,6 +7,8 @@ import com.google.api.services.customsearch.v1.CustomSearchAPI;
 import com.google.api.services.customsearch.v1.model.Result;
 import com.google.api.services.customsearch.v1.model.Search;
 import com.makevideo.make_video.exception.NoImagesFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,24 +29,29 @@ public class ImageService {
     private String cx;
 
     private final JsonFactory JSON_FACTORY =  GsonFactory.getDefaultInstance();
+    Logger log = LoggerFactory.getLogger(ImageService.class);
 
-    public List<String> searchImage(){
+    public List<String> searchImage(String searchTerm){
         try {
-            var cse = new CustomSearchAPI.Builder( GoogleNetHttpTransport.newTrustedTransport(),
+            var cse = new CustomSearchAPI.Builder(GoogleNetHttpTransport.newTrustedTransport(),
                 JSON_FACTORY, null)
                 .setApplicationName("makeVideo").build().cse().list();
 
             cse.setKey(keyapi);
             cse.setCx(cx);
             cse.setSearchType("image");
-            cse.setQ("Michael Jackson");
+            cse.setQ(searchTerm);
             cse.setNum(2);
 
+            log.info("Iniciando pesquisa de images no google:\n {}", cse);
             Search search = cse.execute();
+            log.info("Pesquisa de imagens realizada com sucesso:\n");
+
             var links = Optional.ofNullable(search.getItems())
                     .orElseThrow(() -> new NoImagesFoundException("ImageService: Custom Search retornou 0 imagens")).stream()
                     .map(Result::getLink)
                     .collect(Collectors.toList());
+            log.info("imagens retornadas\nquery: {}\nimages: {}", cse.getQ(), links);
 
             return links;
         } catch (GeneralSecurityException | IOException e) {
