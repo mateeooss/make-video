@@ -1,1 +1,1 @@
-Projeto de uma criador de video dinamico em java
+Um gerador de video customizavel
