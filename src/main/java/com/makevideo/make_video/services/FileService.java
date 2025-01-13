@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
 @Service
@@ -38,7 +40,7 @@ public class FileService {
         }
     }
 
-    public <T> void saveFile(String uri, T object){
+    public <T> void saveFileAsString(String uri, T object){
         try {
             Path path = Path.of(uri);
             if(Files.notExists(path)) throw new RuntimeException("caminho do arquivo inexistente: ");
@@ -51,9 +53,20 @@ public class FileService {
             Files.writeString(path, fileString);
             log.info("Save realizado com sucesso");
         } catch (IOException e) {
-            throw new RuntimeException("erro ao escrever o arquivo no diretorio informado: " + Arrays.toString(e.getStackTrace()));
+            throw new RuntimeException("erro ao escrever o arquivo no diretorio informado: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("erro ao realizar o parse de json para texto: " + Arrays.toString(e.getStackTrace()));
+            throw new RuntimeException("erro ao realizar o parse de json para texto: " + e.getMessage());
+        }
+    }
+
+    public void saveImage(InputStream image, String pathToSafe){
+        try {
+            Path path = Path.of(pathToSafe);
+            log.info("Iniciando o save da imagem no caminho {}", pathToSafe);
+            Files.copy(image, path, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Save realizado com sucesso!");
+        } catch (IOException e) {
+            throw new RuntimeException("erro ao salvar a imagem no diretorio informado: ", e);
         }
     }
 
@@ -77,7 +90,7 @@ public class FileService {
 
     public <T> void createIfNotExistAndSave(String uri, T object){
         if(notExistFile(uri)) this.createFile(uri);
-        this.saveFile(uri, object);
+        this.saveFileAsString(uri, object);
     }
 
     public Boolean existFile(String uri){

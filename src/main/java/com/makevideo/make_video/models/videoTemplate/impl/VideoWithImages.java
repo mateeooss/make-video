@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,10 +60,10 @@ public class VideoWithImages extends VideoTemplate {
 
     @Override
     public void start() {
-        handleFile();
-        handleChatGptVideoScript();
-        handleSentences();
-        handleKeyWords();
+//        handleFile();
+//        handleChatGptVideoScript();
+//        handleSentences();
+//        handleKeyWords();
         handleImg();
     }
 
@@ -96,7 +95,7 @@ public class VideoWithImages extends VideoTemplate {
     }
 
     private void saveFile(){
-        fileService.saveFile("D:/canal opniao/make-video-files/o casamento de Michael Jackson/o casamento de Michael Jackson.txt", this);
+        fileService.saveFileAsString("D:/canal opniao/make-video-files/o casamento de Michael Jackson/o casamento de Michael Jackson.txt", this);
     }
 
     private void handleChatGptVideoScript(){
@@ -175,14 +174,40 @@ public class VideoWithImages extends VideoTemplate {
     }
 
     private void handleImg() {
-        assignImages();
+        assignImagesUrl();
+        downloadImages();
     }
 
-    private void assignImages(){
+    private void assignImagesUrl(){
         getSentences().forEach(sentence -> {
+            List<String> keyWords = getKeyWordsForSearch(sentence);
 
+            sentence.getImagesUrl().addAll(
+                    imageService.searchImages(keyWords)
+            );
         });
-        imageService.searchImage(getSearchTerm());
+
+        saveFile();
+    }
+
+    private void downloadImages() {
+        getSentences().forEach(sentence -> {
+            for (int index = 0; index < sentence.getImagesUrl().size(); index++) {
+                String image = sentence.getImagesUrl().get(index);
+                imageService.downloadImage(image, "D:/canal opniao/make-video-files/o casamento de Michael Jackson/images"+index+"/image"+index);
+            }
+        });
+    }
+
+    private List<String> getKeyWordsForSearch(Sentence sentence){
+        var keyWords = sentence.getKeyWords();
+
+        return Optional.ofNullable(keyWords)
+                .filter(keyWord -> !keyWord.isEmpty())
+                .map(keyWord -> keyWord.size() > 1
+                        ? List.of(searchTerm+" "+keyWord.getFirst(), searchTerm+" "+keyWord.getLast())
+                        : List.of(searchTerm+" "+keyWord.getFirst()))
+                .orElse(List.of(searchTerm));
     }
 
     public void setSearchTerm(String searchTerm) {

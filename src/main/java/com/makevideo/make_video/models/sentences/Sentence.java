@@ -1,16 +1,19 @@
 package com.makevideo.make_video.models.sentences;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class Sentence {
     private String text;
     private List<String> keyWords;
-    private String imagesUrl;
+    private List<String> imagesUrl = new ArrayList<String>();
 
-    public Sentence(String text, List<String> keyWords, String imagesUrl) {
+    public Sentence(String text, List<String> keyWords, List<String> imagesUrl) {
         this.text = text;
         this.keyWords = keyWords;
-        this.imagesUrl = imagesUrl;
+        this.imagesUrl = imagesUrl == null ? new ArrayList<String>() : imagesUrl;
     }
 
     public Sentence() {
@@ -36,11 +39,12 @@ public class Sentence {
         this.keyWords = keyWords;
     }
 
-    public String getImagesUrl() {
+    public List<String> getImagesUrl() {
         return imagesUrl;
     }
 
-    public void setImagesUrl(String imagesUrl) {
-        this.imagesUrl = imagesUrl;
+//    @JsonSetter("imagesUrl")
+    public void setImagesUrl(List<String> imagesUrl) {
+        this.imagesUrl = (imagesUrl == null) ? new ArrayList<>() : imagesUrl;
     }
 }
