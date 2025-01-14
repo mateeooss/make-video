@@ -191,12 +191,14 @@ public class VideoWithImages extends VideoTemplate {
     }
 
     private void downloadImages() {
-        getSentences().forEach(sentence -> {
-            for (int index = 0; index < sentence.getImagesUrl().size(); index++) {
-                String image = sentence.getImagesUrl().get(index);
-                imageService.downloadImage(image, "D:/canal opniao/make-video-files/o casamento de Michael Jackson/images"+index+"/image"+index);
+        for (int indexSent = 0; indexSent < getSentences().size(); indexSent++) {
+            var images = getSentences().get(indexSent).getImagesUrl();
+
+            for (int index = 0; index < images.size(); index++) {
+                String image = images.get(index);
+                fileService.downloadImage(image, "D:/canal opniao/make-video-files/o casamento de Michael Jackson/imagesSent-"+indexSent+"/image-"+index);
             }
-        });
+        }
     }
 
     private List<String> getKeyWordsForSearch(Sentence sentence){

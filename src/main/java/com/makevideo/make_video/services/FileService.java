@@ -8,10 +8,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 
 @Service
 public class FileService {
@@ -59,9 +62,26 @@ public class FileService {
         }
     }
 
+    public void downloadImage(String imageUrl, String path) {
+        try{
+            URI uri = URI.create(imageUrl);
+            URL url = uri.toURL();
+            path = path +"."+getFileExtension(url);
+
+            try (InputStream image = url.openStream()) {
+                this.saveImage(image, path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Erro ao cria URL da imagem:\nimagem: "+imageUrl+"\nerro:", e);
+        }
+    }
+
     public void saveImage(InputStream image, String pathToSafe){
         try {
             Path path = Path.of(pathToSafe);
+            createDirectories(path);
             log.info("Iniciando o save da imagem no caminho {}", pathToSafe);
             Files.copy(image, path, StandardCopyOption.REPLACE_EXISTING);
             log.info("Save realizado com sucesso!");
@@ -76,7 +96,7 @@ public class FileService {
 
             Path path = Path.of(uri);
             log.info("Criando estrutura de pastas caso não exista");
-            Files.createDirectories(path.getParent());
+            createDirectories(path);
             log.info("Pastas inicializadas com sucesso");
             log.info("Iniciando a criação do arquivo no caminho: {}", uri);
             Files.createFile(path);
@@ -85,6 +105,14 @@ public class FileService {
             throw new RuntimeException("erro ao escrever o arquivo no diretorio informado: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("erro ao realizar o parse de json para texto: " + e.getMessage());
+        }
+    }
+
+    private void createDirectories(Path path){
+        try{
+            Files.createDirectories(path.getParent());
+        } catch (IOException e) {
+            throw new RuntimeException("erro ao criar a pasta no diretorio informado: " + e.getMessage());
         }
     }
 
@@ -100,5 +128,15 @@ public class FileService {
 
     public Boolean notExistFile(String uri){
         return !existFile(uri);
+    }
+
+    private String getFileExtension(URL url){
+        try {
+            URLConnection connection = url.openConnection();
+            String contentType = connection.getContentType();
+            return contentType.split("/")[1];
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao buscar a extenção do file",e);
+        }
     }
 }

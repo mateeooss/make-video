@@ -35,15 +35,8 @@ public class ImageService {
     @Value("${google.searchEngine.id}")
     private String cx;
 
-    private FileService fileService;
-
     private final JsonFactory JSON_FACTORY =  GsonFactory.getDefaultInstance();
     Logger log = LoggerFactory.getLogger(ImageService.class);
-
-    @Autowired
-    public ImageService(FileService fileService) {
-        this.fileService = fileService;
-    }
 
     public List<String> searchImages(List<String> searchTermList){
         List<String> imagesList = new ArrayList<>();
@@ -75,21 +68,9 @@ public class ImageService {
 
             return links;
         } catch (GeneralSecurityException | IOException e) {
-            throw new NoImagesFoundException("ImageService: erro ao buscar imagens com o custom search", e.getCause());
+            throw new NoImagesFoundException("ImageService: erro ao buscar imagens com o custom search", e);
         }
     }
 
-    public void downloadImage(String imageUrl, String path) {
-        try{
-            URI uri = URI.create(imageUrl);
-            URL url = uri.toURL();
-            try (InputStream image = url.openStream()) {
-                this.fileService.saveImage(image, path);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Erro ao cria URL da imagem:\nimagem: "+imageUrl+"\nerro:", e);
-        }
-    }
+
 }
