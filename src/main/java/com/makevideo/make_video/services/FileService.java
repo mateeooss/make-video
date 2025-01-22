@@ -8,13 +8,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class FileService {
@@ -62,19 +61,21 @@ public class FileService {
         }
     }
 
-    public void downloadImage(String imageUrl, String path) {
-        try{
-            URI uri = URI.create(imageUrl);
-            URL url = uri.toURL();
+    public void downloadImage(String imageUrl, String path) throws IOException {
+//        path = path + ".png";
+        log.info("Abrindo conecção para download da imagem URL: {}", imageUrl);
+        try {
+            URL url = new URL(imageUrl);
+            URLConnection connection =  url.openConnection();
+            connection.setConnectTimeout(6000);
+            connection.setReadTimeout(6000);
             path = path +"."+getFileExtension(url);
 
-            try (InputStream image = url.openStream()) {
-                this.saveImage(image, path);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            try (InputStream image = connection.getInputStream()) {
+                saveImage(image, path);
             }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Erro ao cria URL da imagem:\nimagem: "+imageUrl+"\nerro:", e);
+        } catch (IOException e) {
+            throw e;
         }
     }
 
@@ -130,13 +131,24 @@ public class FileService {
         return !existFile(uri);
     }
 
-    private String getFileExtension(URL url){
+    private String getFileExtension(URL url) throws IOException {
+        List<String> imageFileTypes = Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp", "ico");
+
         try {
-            URLConnection connection = url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            connection.setConnectTimeout(6000);
+            connection.setReadTimeout(6000);
+            connection.setRequestMethod("GET");
+            connection.connect();
             String contentType = connection.getContentType();
-            return contentType.split("/")[1];
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao buscar a extenção do file",e);
+
+            var fileExtension = contentType.split("/")[1];
+
+            if(!imageFileTypes.contains(fileExtension)) throw new IllegalStateException("Extensão do arquivo não é de uma imagem");
+            return fileExtension;
+        } catch (Exception e) {
+            throw e;
         }
     }
 }
