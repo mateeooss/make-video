@@ -1,1 +1,2 @@
-🌐 [English](README-en.md) | 🇧🇷 [Português](README-pt.md)
+🌐 [English](README-en.md)
+🇧🇷 [Português](README-pt.md)
