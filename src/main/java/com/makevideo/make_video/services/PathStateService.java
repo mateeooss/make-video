@@ -8,5 +8,6 @@ public class PathStateService {
     @Value("${basePath}")
     public String basePath;
     public String directoryPath;
-    public String txtPath;
+    public String imagesDirectoryPath;
+    public String txtDirectoryPath;
 }

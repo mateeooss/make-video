@@ -3,7 +3,7 @@ package com.makevideo.make_video.models.chatGpt;
 import java.util.List;
 
 public class Request {
-    private String model = "gpt-4";
+    private String model = "chatgpt-4o-latest";
     private List<MessageRequest> messages;
 
     public Request(List<MessageRequest> messages) {

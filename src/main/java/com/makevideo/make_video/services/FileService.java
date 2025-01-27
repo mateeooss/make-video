@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class FileService {
@@ -39,6 +41,22 @@ public class FileService {
             throw new RuntimeException("erro ao ler o arquivo no diretorio informado: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("erro ao realizar o parse de json para texto: " + e.getMessage());
+        }
+    }
+
+
+    public List<Path> getPathListBydirectory(String directory) throws NoSuchFieldException {
+        Path pathDirectory = Path.of(directory);
+
+        try (Stream<Path> paths = Files.list(pathDirectory)) {
+            if (!Files.isDirectory(pathDirectory) || !Files.isReadable(pathDirectory)) {
+                throw new NoSuchFieldException("O diretório não é válido");
+            }
+
+            return paths.filter(Files::isRegularFile).toList();
+        } catch (NoSuchFieldException | IOException e) {
+          log.info("Erro ao ler as imagens do diretorio");
+          throw new NoSuchFieldException("O diretorio não é valido");
         }
     }
 
@@ -109,7 +127,7 @@ public class FileService {
         }
     }
 
-    private void createDirectories(Path path){
+    public void createDirectories(Path path){
         try{
             Files.createDirectories(path.getParent());
         } catch (IOException e) {
