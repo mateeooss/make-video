@@ -1,1 +1,3 @@
-Um gerador de video customizavel
+🌐 [English](README-en.md) 
+
+🇧🇷 [Português](README-pt.md)
