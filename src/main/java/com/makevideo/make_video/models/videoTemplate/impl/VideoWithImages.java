@@ -17,7 +17,9 @@ import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,6 +61,8 @@ public class VideoWithImages extends VideoTemplate {
     @JsonIgnore
     private PathStateService pathStateService;
     @JsonIgnore
+    private AudioService audioService;
+    @JsonIgnore
     private Request request;
     @JsonIgnore
     private final Logger log = LoggerFactory.getLogger(VideoWithImages.class);
@@ -71,6 +75,7 @@ public class VideoWithImages extends VideoTemplate {
         fileService = ServicesFactory.getService(FileService.class);
         imageService = ServicesFactory.getService(ImageService.class);
         pathStateService = ServicesFactory.getService(PathStateService.class);
+        audioService = ServicesFactory.getService(AudioService.class);
     }
 
     @Override
@@ -79,7 +84,9 @@ public class VideoWithImages extends VideoTemplate {
 //        handleChatGptVideoScript();
 //        handleSentences();
 //        handleKeyWords();
-        handleImg();
+//        handleImg();
+        handleAudio();
+//        handleVideo();
     }
 
     @Override
@@ -235,7 +242,6 @@ public class VideoWithImages extends VideoTemplate {
         log.info("Download de imagens finalizado com sucesso!");
     }
 
-    //todo corrigir esses caminhos
     private void resizeImages(){
         String directory = pathStateService.imagesDirectoryPath;
         log.info("Inicializando o resize das imagens");
@@ -259,6 +265,56 @@ public class VideoWithImages extends VideoTemplate {
             log.info("Todas imagens foram redimencionadas com sucesso!");
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    private void handleAudio(){
+        this.audioService.textToSpeech("foi caralho, boa noite esse é um texto, vamos ver o que da isso vey");
+    }
+
+    private void handleVideo(){
+        try {
+            // Caminho para o ffmpeg.exe
+            String ffmpegPath = "src/main/resources/ffmpeg/bin/ffmpeg.exe";  // Ajuste o caminho conforme necessário
+
+            // Defina o comando para criar um vídeo preto de 2 segundos
+            String[] command = {
+                    ffmpegPath,
+                    "-f", "lavfi",
+                    "-t", "2",
+                    "-i", "color=c=black:s=1920x1080:r=30",
+                    "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p",
+                    "output_video.mp4"
+            };
+
+            // Inicia o processo
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.redirectErrorStream(true);  // Mescla a saída de erro com a saída padrão
+            Process process = processBuilder.start();
+
+            // Captura a saída (sucesso e erro)
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
+
+            // Aguarda o término do processo
+            int exitCode = process.waitFor();
+
+            // Exibe a saída do processo
+            if (exitCode == 0) {
+                System.out.println("Vídeo preto de 2 segundos criado com sucesso!");
+            } else {
+                System.err.println("Erro ao criar o vídeo. Saída do FFmpeg:");
+                System.err.println(output.toString());
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

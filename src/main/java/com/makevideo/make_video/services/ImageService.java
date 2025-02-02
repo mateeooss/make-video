@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Validated
 public class ImageService {
 
-    @Value("${google.customSearch.apikey}")
+    @Value("${google.apikey}")
     private String keyapi;
 
     @Value("${google.searchEngine.id}")
