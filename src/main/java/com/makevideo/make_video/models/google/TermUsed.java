@@ -1,4 +1,4 @@
-package com.makevideo.make_video.models.googleApiTerm;
+package com.makevideo.make_video.models.google;
 
 import java.util.Objects;
 

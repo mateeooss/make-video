@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum LanguagesEnum {
-    EN_US("EN-US", "English"),
-    PT_BR("PT-BR", "Portuguese"),
-    ES_ES("ES-ES", "Spanish"),
-    FR_FR("FR-FR", "French"),
+    EN_US("en-US", "English"),
+    PT_BR("pt-BR", "Portuguese"),
+    ES_ES("es-ES", "Spanish"),
+    FR_FR("fr-FR", "French"),
     DE_DE("DE-DE", "German"),
     ZH_CN("ZH-CN", "Mandarin Chinese"),
     JA_JP("JA-JP", "Japanese"),

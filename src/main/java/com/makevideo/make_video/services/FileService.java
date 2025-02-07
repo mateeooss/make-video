@@ -6,6 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
@@ -87,10 +91,20 @@ public class FileService {
             URLConnection connection =  url.openConnection();
             connection.setConnectTimeout(6000);
             connection.setReadTimeout(6000);
-            path = path +"."+getFileExtension(url);
+            var extension = getFileExtension(url);
+            //todo ver sobre essa parte da extensão salvar sempre como .png?
+            path = path +"."+extension;
+//            path = path +".png";
 
             try (InputStream image = connection.getInputStream()) {
-                saveImage(image, path);
+                if(extension.equals("gif")){
+                    BufferedImage firstFrame = extractFirstFrameFromGif(image);
+                    InputStream inputStream = convert(firstFrame, "png");
+
+                    saveImage(inputStream, path.replace(".gif", ".png"));
+                } else {
+                    saveImage(image, path);
+                }
             }
         } catch (IOException e) {
             throw e;
@@ -108,6 +122,18 @@ public class FileService {
             throw new RuntimeException("erro ao salvar a imagem no diretorio informado: ", e);
         }
     }
+
+    private BufferedImage extractFirstFrameFromGif(InputStream gifInputStream) throws IOException {
+        // Lê o GIF e retorna o primeiro frame
+        return ImageIO.read(gifInputStream);
+    }
+
+    public InputStream convert(BufferedImage image, String formatName) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, formatName, byteArrayOutputStream);
+        return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+    }
+
 
     public void createFile(String uri){
         try {

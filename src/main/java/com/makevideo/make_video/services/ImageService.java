@@ -7,7 +7,7 @@ import com.google.api.services.customsearch.v1.CustomSearchAPI;
 import com.google.api.services.customsearch.v1.model.Result;
 import com.google.api.services.customsearch.v1.model.Search;
 import com.makevideo.make_video.exception.NoImagesFoundException;
-import com.makevideo.make_video.models.googleApiTerm.TermUsed;
+import com.makevideo.make_video.models.google.TermUsed;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,59 +111,71 @@ public class ImageService {
     }
 
     public void resizeWithBlurImage(String inputImagePath, String outputImagePath, int width, int height) {
-        // Ler a imagem original
-        log.info("Inicializando o resize com blur para o tamanho width {} e height {} da imagem: \n{}", width, height, inputImagePath);
-        Mat original = opencv_imgcodecs.imread(inputImagePath);
-        if (original.empty()) {
-            System.err.println("Erro ao carregar a imagem!");
-            return;
+        try {
+            log.info("Inicializando o resize com blur para {}x{} da imagem: {}", width, height, inputImagePath);
+
+            // Carregar imagem original
+            Mat original = opencv_imgcodecs.imread(inputImagePath);
+            if (original.empty()) {
+                throw new RuntimeException("Erro ao carregar a imagem: " + inputImagePath);
+            }
+
+            int originalWidth = original.cols();
+            int originalHeight = original.rows();
+            int fullHDWidth = width;
+            int fullHDHeight = height;
+
+            // Calcular escala proporcional
+            double scaleWidth = (double) fullHDWidth / originalWidth;
+            double scaleHeight = (double) fullHDHeight / originalHeight;
+
+            // Arredondamento correto
+            double scale = Math.max(scaleWidth, scaleHeight);
+
+            int newWidth = (int) Math.ceil(originalWidth * scale);
+            int newHeight = (int) Math.ceil(originalHeight * scale);
+
+            // Garantir que não fiquem menores que Full HD
+            newWidth = Math.max(newWidth, fullHDWidth);
+            newHeight = Math.max(newHeight, fullHDHeight);
+
+            // Redimensionar a imagem
+            Mat resizedImage = new Mat();
+            opencv_imgproc.resize(original, resizedImage,  new org.bytedeco.opencv.opencv_core.Size(newWidth, newHeight));
+
+            // Centralizar
+            int xOffset = (newWidth - fullHDWidth) / 2;
+            int yOffset = (newHeight - fullHDHeight) / 2;
+
+            // Garantir que não extrapole
+            xOffset = Math.max(0, xOffset);
+            yOffset = Math.max(0, yOffset);
+
+            Rect roi = new Rect(xOffset, yOffset, fullHDWidth, fullHDHeight);
+            Mat croppedImage = new Mat(resizedImage, roi);
+            opencv_imgproc.GaussianBlur(croppedImage, croppedImage,  new org.bytedeco.opencv.opencv_core.Size(55, 55), 30);
+
+            // Copiar imagem original proporcionalmente no centro da imagem final
+            double minScale = Math.min(scaleWidth, scaleHeight);
+            int finalWidth = (int) (originalWidth * minScale);
+            int finalHeight = (int) (originalHeight * minScale);
+
+            int centerX = (fullHDWidth - finalWidth) / 2;
+            int centerY = (fullHDHeight - finalHeight) / 2;
+
+            Mat scaledOriginal = new Mat();
+            opencv_imgproc.resize(original, scaledOriginal, new org.bytedeco.opencv.opencv_core.Size(finalWidth, finalHeight));
+
+            Rect roi2 = new Rect(centerX, centerY, finalWidth, finalHeight);
+            Mat regionOfInterest = croppedImage.apply(roi2);
+            scaledOriginal.copyTo(regionOfInterest);
+
+            // Salvar
+            opencv_imgcodecs.imwrite(outputImagePath, croppedImage);
+            log.info("Imagem redimensionada com blur salva em: {}", outputImagePath);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao redimensionar a imagem: " + inputImagePath, e);
         }
-
-        // Tamanho da nova imagem (Full HD)
-        int fullHDWidth = width;
-        int fullHDHeight = height;
-
-        // Calcular novo tamanho proporcional para preencher sem distorcer
-        int originalWidth = original.cols();
-        int originalHeight = original.rows();
-
-        // Calcula a proporção para escalar a imagem
-        double scaleWidth = (double) fullHDWidth / originalWidth;
-        double scaleHeight = (double) fullHDHeight / originalHeight;
-        double scale = Math.max(scaleWidth, scaleHeight); // Aumentar para cobrir completamente
-
-        int newWidth = (int) (originalWidth * scale);
-        int newHeight = (int) (originalHeight * scale);
-
-        // Redimensionar a imagem
-        Mat resizedImage = new Mat();
-        opencv_imgproc.resize(original, resizedImage, new org.bytedeco.opencv.opencv_core.Size(newWidth, newHeight));
-
-        // Centralizar a imagem redimensionada no fundo
-        int xOffset = (newWidth - fullHDWidth) / 2;
-        int yOffset = (newHeight - fullHDHeight) / 2;
-
-        Rect roi = new Rect(xOffset, yOffset, fullHDWidth, fullHDHeight);
-        Mat croppedImage = new Mat(resizedImage, roi);
-        opencv_imgproc.GaussianBlur(croppedImage, croppedImage, new org.bytedeco.opencv.opencv_core.Size(55, 55), 30);
-
-        var a = Math.min(scaleWidth, scaleHeight);
-        int wi = (int) (originalWidth * a);
-        int hei = (int) (originalHeight * a);
-
-        int centerX = (fullHDWidth - wi) / 2;
-        int centerY = (fullHDHeight - hei) / 2;
-        // Copiar a imagem original no centro da imagem borrada
-        Mat teste = new Mat();
-
-        opencv_imgproc.resize(original, teste, new org.bytedeco.opencv.opencv_core.Size(wi, hei));
-
-        Rect roi2 = new Rect(centerX, centerY, wi, hei);
-        Mat regionOfInterest = croppedImage.apply(roi2); // Região onde será colocada a imagem original
-        teste.copyTo(regionOfInterest); // Copiar imagem original para a região
-
-        // Salvar a imagem final
-        opencv_imgcodecs.imwrite(outputImagePath, croppedImage);
-        log.info("Aplicado redimencionada com blur na imagem com sucesso\nsalvo no caminho: {}!",outputImagePath);
     }
 }

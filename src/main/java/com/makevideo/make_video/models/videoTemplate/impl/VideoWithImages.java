@@ -6,7 +6,8 @@ import com.makevideo.make_video.enums.ChatGptRoleEnum;
 import com.makevideo.make_video.enums.LanguagesEnum;
 import com.makevideo.make_video.factorys.ServicesFactory;
 import com.makevideo.make_video.models.chatGpt.*;
-import com.makevideo.make_video.models.googleApiTerm.TermUsed;
+import com.makevideo.make_video.models.google.TermUsed;
+import com.makevideo.make_video.models.google.TextToSpeech;
 import com.makevideo.make_video.models.videoTemplate.VideoTemplate;
 import com.makevideo.make_video.models.sentences.Sentence;
 import com.makevideo.make_video.services.*;
@@ -23,6 +24,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -65,6 +67,8 @@ public class VideoWithImages extends VideoTemplate {
     @JsonIgnore
     private Request request;
     @JsonIgnore
+    private final String imageConvertedNomenclature = "converted";
+    @JsonIgnore
     private final Logger log = LoggerFactory.getLogger(VideoWithImages.class);
 
     public VideoWithImages(@JsonProperty("title") String title) {
@@ -80,12 +84,13 @@ public class VideoWithImages extends VideoTemplate {
 
     @Override
     public void start() {
-//        handleFile();
-//        handleChatGptVideoScript();
-//        handleSentences();
-//        handleKeyWords();
-//        handleImg();
-        handleAudio();
+        handleFile();
+        handleChatGptVideoScript();
+        handleSentences();
+        handleKeyWords();
+        handleImg();
+//        resizeImages();
+//        handleAudio(); //todo retirar esse trecho dps, usar ele para testar a melhor voz
 //        handleVideo();
     }
 
@@ -117,7 +122,7 @@ public class VideoWithImages extends VideoTemplate {
     }
 
     private void saveFile(){
-        fileService.saveFileAsString("D:/canal opniao/make-video-files/o casamento de Michael Jackson/o casamento de Michael Jackson.txt", this);
+        fileService.saveFileAsString(pathStateService.txtDirectoryPath, this);
     }
 
     private void handleChatGptVideoScript(){
@@ -247,16 +252,18 @@ public class VideoWithImages extends VideoTemplate {
         log.info("Inicializando o resize das imagens");
         try {
             log.info("Inicializando a busca de todos caminhos de imagens do video");
-            List<Path> imagesPath = Files.walk(Path.of(directory))
-                                         .filter(path -> !Files.isDirectory(path)).toList();
+            List<Path> imagesPath = Files.walk(Path.of("D:/canal opniao/make-video-files/Como melhorar o sono/video-images"))
+                                         .filter(path -> {
+                                             return !Files.isDirectory(path) || path.getFileName().toString().contains(imageConvertedNomenclature);
+                                         }).toList();
 
-            log.info("Caminhos das imagens do video foi gerado com sucesso!", imagesPath.toArray());
+            log.info("Caminhos das imagens do video foi gerado com sucesso!\n"+ Arrays.toString(imagesPath.toArray()));
 
             imagesPath.forEach(imagePath -> {
                 String inputPathString = imagePath.toString();
 
                 String outputImagePath =
-                        inputPathString.replaceAll("([\\\\/])([^\\\\/]+)(\\.[^.]+)$", "$1$2-converted$3");
+                        inputPathString.replaceAll("([\\\\/])([^\\\\/]+)(\\.[^.]+)$", STR."$1$2-\{imageConvertedNomenclature}$3");
 
 
                 this.imageService.resizeWithBlurImage(imagePath.toString(), outputImagePath, 1920, 1080);
@@ -269,8 +276,30 @@ public class VideoWithImages extends VideoTemplate {
     }
 
 
+    //todo retirar o modelname e colocar dinamico assim como o language
     private void handleAudio(){
-        this.audioService.textToSpeech("foi caralho, boa noite esse é um texto, vamos ver o que da isso vey");
+        TextToSpeech textToSpeech =
+                TextToSpeech.builder().text("<speak>\n" +
+                        "  <p>Bem-vindo, aventureiro! Você está prestes a embarcar em uma jornada épica.</p>\n" +
+                        "\n" +
+                        "  <p><break time=\"500ms\"/> Você se encontra diante de uma floresta misteriosa. O vento sopra levemente entre as árvores... <break time=\"1s\"/></p>\n" +
+                        "\n" +
+                        "  <p><prosody pitch=\"+5%\">De repente, um brilho surge entre as folhagens!</prosody> <break time=\"500ms\"/> Você se aproxima e percebe que é um <emphasis level=\"moderate\">antigo medalhão dourado</emphasis>. O que você faz?</p>\n" +
+                        "\n" +
+                        "  <p>Se quiser pegá-lo, diga <prosody volume=\"loud\">\"pegar medalhão\"</prosody>. Se quiser seguir pelo caminho sombrio, diga <prosody volume=\"soft\">\"seguir caminho\"</prosody>.</p>\n" +
+                        "\n" +
+                        "  <p><break time=\"1s\"/> Mas espere! <prosody rate=\"fast\">Algo se move entre os arbustos...</prosody> <break time=\"500ms\"/> Será um aliado ou um perigo oculto?</p>\n" +
+                        "\n" +
+                        "  <p><prosody pitch=\"-3%\">A escolha está em suas mãos.</prosody> Boa sorte, aventureiro!</p>\n" +
+                        "</speak>")
+                .languageCode(LanguagesEnum.PT_BR.getAcronym())
+                .modelName("pt-BR-Wavenet-A")
+                .voiceSpeed(1.11)
+                .SSML(true)
+                .voicePitch(-4.40)
+                .build();
+
+        this.audioService.textToSpeech(textToSpeech);
     }
 
     private void handleVideo(){
