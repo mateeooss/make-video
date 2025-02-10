@@ -16,9 +16,9 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -67,7 +67,8 @@ public class FileService {
     public <T> void saveFileAsString(String uri, T object){
         try {
             Path path = Path.of(uri);
-            if(Files.notExists(path)) throw new RuntimeException("caminho do arquivo inexistente: ");
+
+            createDirectories(path.getParent());
 
             log.info("Iniciando a conversão do objecto para json em String");
             String fileString = mapper.writeValueAsString(object);
@@ -101,9 +102,9 @@ public class FileService {
                     BufferedImage firstFrame = extractFirstFrameFromGif(image);
                     InputStream inputStream = convert(firstFrame, "png");
 
-                    saveImage(inputStream, path.replace(".gif", ".png"));
+                    createFile(inputStream, path.replace(".gif", ".png"));
                 } else {
-                    saveImage(image, path);
+                    createFile(image, path);
                 }
             }
         } catch (IOException e) {
@@ -111,15 +112,27 @@ public class FileService {
         }
     }
 
-    public void saveImage(InputStream image, String pathToSafe){
+    public void createFile(InputStream inputStream, String pathToSafe){
         try {
             Path path = Path.of(pathToSafe);
-            createDirectories(path);
-            log.info("Iniciando o save da imagem no caminho {}", pathToSafe);
-            Files.copy(image, path, StandardCopyOption.REPLACE_EXISTING);
+            createDirectories(path.getParent());
+            log.info("Iniciando o save do arquivo no caminho {}", pathToSafe);
+            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
             log.info("Save realizado com sucesso!");
         } catch (IOException e) {
-            throw new RuntimeException("erro ao salvar a imagem no diretorio informado: ", e);
+            throw new RuntimeException("erro ao salvar o arquivo no diretorio informado: ", e);
+        }
+    }
+
+    public void createFile(byte[] file, String pathToSafe){
+        try {
+            Path path = Path.of(pathToSafe);
+            createDirectories(path.getParent());
+            log.info("Iniciando o save do arquivo no caminho {}", pathToSafe);
+            Files.write(path, file, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            log.info("Save realizado com sucesso!");
+        } catch (IOException e) {
+            throw new RuntimeException("erro ao salvar o arquivo no diretorio informado: ", e);
         }
     }
 
@@ -134,46 +147,26 @@ public class FileService {
         return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     }
 
-
-    public void createFile(String uri){
-        try {
-            if(existFile(uri)) throw new RuntimeException("O arquivo ja existe: ");
-
-            Path path = Path.of(uri);
-            log.info("Criando estrutura de pastas caso não exista");
-            createDirectories(path);
-            log.info("Pastas inicializadas com sucesso");
-            log.info("Iniciando a criação do arquivo no caminho: {}", uri);
-            Files.createFile(path);
-            log.info("Arquivo criado com sucesso: {}", uri);
-        } catch (IOException e) {
-            throw new RuntimeException("erro ao escrever o arquivo no diretorio informado: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("erro ao realizar o parse de json para texto: " + e.getMessage());
-        }
-    }
-
     public void createDirectories(Path path){
         try{
-            Files.createDirectories(path.getParent());
+            Files.createDirectories(path);
         } catch (IOException e) {
             throw new RuntimeException("erro ao criar a pasta no diretorio informado: " + e.getMessage());
         }
     }
 
-    public <T> void createIfNotExistAndSave(String uri, T object){
-        if(notExistFile(uri)) this.createFile(uri);
-        this.saveFileAsString(uri, object);
+    public void createDirectoriesByList(List<Path> paths){
+        paths.forEach(this::createDirectories);
     }
 
-    public Boolean existFile(String uri){
-        Path path = Path.of(uri);
-        return Files.exists(path);
-    }
-
-    public Boolean notExistFile(String uri){
-        return !existFile(uri);
-    }
+//    public Boolean existFile(String uri){
+//        Path path = Path.of(uri);
+//        return Files.exists(path);
+//    }
+//
+//    public Boolean notExistFile(String uri){
+//        return !existFile(uri);
+//    }
 
     private String getFileExtension(URL url) throws IOException {
         List<String> imageFileTypes = Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp", "ico");

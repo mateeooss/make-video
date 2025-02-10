@@ -2,6 +2,7 @@ package com.makevideo.make_video.models.videoTemplate.impl;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.protobuf.ByteString;
 import com.makevideo.make_video.enums.ChatGptRoleEnum;
 import com.makevideo.make_video.enums.LanguagesEnum;
 import com.makevideo.make_video.factorys.ServicesFactory;
@@ -23,15 +24,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.opencv.imgcodecs.Imgcodecs.imread;
-import static org.opencv.imgcodecs.Imgcodecs.imwrite;
-import static org.opencv.imgproc.Imgproc.cvtColor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
 @NoArgsConstructor
@@ -49,6 +47,8 @@ public class VideoWithImages extends VideoTemplate {
     private LanguagesEnum language;
     private List<LanguagesEnum> AdditionalLanguages;
     private String directoryPath;
+    private String directoryPathTxt;
+    private String directoryPathMidia;
 
     @JsonIgnore
     private SentenceService sentenceService;
@@ -84,13 +84,12 @@ public class VideoWithImages extends VideoTemplate {
 
     @Override
     public void start() {
-        handleFile();
-        handleChatGptVideoScript();
+//        handleFile();
+//        handleChatGptVideoScript();
         handleSentences();
         handleKeyWords();
         handleImg();
-//        resizeImages();
-//        handleAudio(); //todo retirar esse trecho dps, usar ele para testar a melhor voz
+        handleAudio(); //todo retirar esse trecho dps, usar ele para testar a melhor voz
 //        handleVideo();
     }
 
@@ -106,23 +105,23 @@ public class VideoWithImages extends VideoTemplate {
 
     private void handleFile() {
         assignFilePath();
-        createFile();
+        createDirectorys();
+    }
+
+    private void createDirectorys(){
+        fileService.createDirectoriesByList(List.of(
+                Path.of(directoryPath), Path.of(directoryPathMidia)
+        ));
     }
 
     private void assignFilePath(){
-        String directoryPath = pathStateService.basePath +"/"+this.search;
-        pathStateService.directoryPath = directoryPath;
-        pathStateService.txtDirectoryPath = directoryPath+"/"+this.search+".txt";
+        var rootPath = pathStateService.basePath +"/"+this.search;
+        var txtPath = rootPath+"/"+"video_metadata.txt";
+        var midiaPath = rootPath+"/midia";
 
-        setDirectoryPath(directoryPath);
-    }
-
-    private void createFile(){
-        fileService.createIfNotExistAndSave(pathStateService.txtDirectoryPath, this);
-    }
-
-    private void saveFile(){
-        fileService.saveFileAsString(pathStateService.txtDirectoryPath, this);
+        setDirectoryPath(rootPath);
+        setDirectoryPathTxt(txtPath);
+        setDirectoryPathMidia(midiaPath);
     }
 
     private void handleChatGptVideoScript(){
@@ -135,7 +134,7 @@ public class VideoWithImages extends VideoTemplate {
         MessageRequest userRequest = getUserGptRequest();
         Request request = new Request(new ArrayList<>(List.of(systemRequest, userRequest)));
         setRequest(request);
-        saveFile();
+        saveTxt();
     }
 
     private void assignRawContentOriginal() {
@@ -147,7 +146,11 @@ public class VideoWithImages extends VideoTemplate {
                             .orElseThrow(() -> new RuntimeException("Erro ao capturar a mensagem retornada pelo ChatGpt"));
 
         setRawContentOriginal(rawContent);
-        saveFile();
+        saveTxt();
+    }
+
+    private void saveTxt(){
+        fileService.saveFileAsString(getDirectoryPathTxt(), this);
     }
 
     private void handleSentences() {
@@ -156,14 +159,34 @@ public class VideoWithImages extends VideoTemplate {
 
     private void assignSentences() {
         List<String> sentencesText = sentenceService.getSentences(getRawContentOriginal());
+        List<Sentence> sentenceList = new ArrayList<>();
 
         Optional.ofNullable(sentencesText)
                 .filter(sentences -> !sentences.isEmpty())
                 .orElseThrow(() -> new IllegalStateException("a lista de sentences foram retornadas como vazias ou nullas"));
 
-        List<Sentence> sentenceList = sentencesText.stream().map(Sentence::new).collect(Collectors.toList());
+
+        for(int i = 0; i < sentencesText.size(); i++){
+            String sentenceRootPath = getDirectoryPathMidia()+"/sentenca-"+i;
+            String imagesPath = sentenceRootPath+"/images";
+            String audioPath = sentenceRootPath+"/audio/audio.mp3";
+            String videoPath = sentenceRootPath+"/video/video.mp4"; //todo verificar se vai ser essa extenção de video msm
+
+            fileService.createDirectoriesByList(List.of(
+                    Path.of(sentenceRootPath), Path.of(imagesPath), Path.of(audioPath).getParent(), Path.of(videoPath).getParent()
+            ));
+
+            sentenceList.add(new Sentence(
+                    sentencesText.get(i),
+                    sentenceRootPath,
+                    imagesPath,
+                    audioPath,
+                    videoPath
+            ));
+        }
+
         setSentences(sentenceList);
-        saveFile();
+        saveTxt();
     }
 
 
@@ -197,12 +220,11 @@ public class VideoWithImages extends VideoTemplate {
     private void assignKeyWords(){
         var sentencesWithKeyWords = this.keywordService.getKeyWordsBySentenceList(getSentences());
         setSentences(sentencesWithKeyWords);
-        saveFile();
+        saveTxt();
     }
 
     private void handleImg() {
         assignImagesUrl();
-        createImagesDirectory();
         downloadImages();
         resizeImages();
     }
@@ -218,27 +240,20 @@ public class VideoWithImages extends VideoTemplate {
             );
         });
 
-        saveFile();
-    }
-
-    private void createImagesDirectory(){
-        Path path = Path.of(getDirectoryPath()+"/video-images");
-
-        fileService.createDirectories(path);
-        pathStateService.imagesDirectoryPath = path.toString();
+        saveTxt();
     }
 
     //todo corrigir o caminho ali quando liberar o fluxo
     private void downloadImages() {
         for (int indexSent = 0; indexSent < getSentences().size(); indexSent++) {
-            var images = getSentences().get(indexSent).getImagesUrl();
+            var sentence = getSentences().get(indexSent);
+            var images = sentence.getImagesUrl();
 
             for (int imgIndex = 0; imgIndex < images.size(); imgIndex++) {
                 try{
                     String image = images.get(imgIndex);
-                    String imagesDirectory = pathStateService.imagesDirectoryPath;
 
-                    fileService.downloadImage(image, imagesDirectory+"/sentenca-"+indexSent+"/image-"+imgIndex);
+                    fileService.downloadImage(image, sentence.getImagesPath()+"/image-"+imgIndex);
                 } catch (Exception e){
                     log.warn("Erro ao baixar a imagem, seguindo o fluxo", e);
                 }
@@ -248,11 +263,11 @@ public class VideoWithImages extends VideoTemplate {
     }
 
     private void resizeImages(){
-        String directory = pathStateService.imagesDirectoryPath;
+        String directory = getDirectoryPathMidia();
         log.info("Inicializando o resize das imagens");
         try {
             log.info("Inicializando a busca de todos caminhos de imagens do video");
-            List<Path> imagesPath = Files.walk(Path.of("D:/canal opniao/make-video-files/Como melhorar o sono/video-images"))
+            List<Path> imagesPath = Files.walk(Path.of(getDirectoryPathMidia()))
                                          .filter(path -> {
                                              return !Files.isDirectory(path) || path.getFileName().toString().contains(imageConvertedNomenclature);
                                          }).toList();
@@ -278,28 +293,32 @@ public class VideoWithImages extends VideoTemplate {
 
     //todo retirar o modelname e colocar dinamico assim como o language
     private void handleAudio(){
-        TextToSpeech textToSpeech =
-                TextToSpeech.builder().text("<speak>\n" +
-                        "  <p>Bem-vindo, aventureiro! Você está prestes a embarcar em uma jornada épica.</p>\n" +
-                        "\n" +
-                        "  <p><break time=\"500ms\"/> Você se encontra diante de uma floresta misteriosa. O vento sopra levemente entre as árvores... <break time=\"1s\"/></p>\n" +
-                        "\n" +
-                        "  <p><prosody pitch=\"+5%\">De repente, um brilho surge entre as folhagens!</prosody> <break time=\"500ms\"/> Você se aproxima e percebe que é um <emphasis level=\"moderate\">antigo medalhão dourado</emphasis>. O que você faz?</p>\n" +
-                        "\n" +
-                        "  <p>Se quiser pegá-lo, diga <prosody volume=\"loud\">\"pegar medalhão\"</prosody>. Se quiser seguir pelo caminho sombrio, diga <prosody volume=\"soft\">\"seguir caminho\"</prosody>.</p>\n" +
-                        "\n" +
-                        "  <p><break time=\"1s\"/> Mas espere! <prosody rate=\"fast\">Algo se move entre os arbustos...</prosody> <break time=\"500ms\"/> Será um aliado ou um perigo oculto?</p>\n" +
-                        "\n" +
-                        "  <p><prosody pitch=\"-3%\">A escolha está em suas mãos.</prosody> Boa sorte, aventureiro!</p>\n" +
-                        "</speak>")
-                .languageCode(LanguagesEnum.PT_BR.getAcronym())
-                .modelName("pt-BR-Wavenet-A")
-                .voiceSpeed(1.11)
-                .SSML(true)
-                .voicePitch(-4.40)
-                .build();
+        AtomicBoolean erroOcorrido = new AtomicBoolean(false);
 
-        this.audioService.textToSpeech(textToSpeech);
+        this.getSentences().parallelStream().forEach(sentence -> {
+            try{
+                TextToSpeech textToSpeech =
+                        TextToSpeech.builder()
+                                .text(sentence.getText())
+                                .languageCode(LanguagesEnum.PT_BR.getAcronym())
+                                .modelName("pt-BR-Wavenet-E")
+                                .voiceSpeed(1.10)
+                                .SSML(false)
+                                .voicePitch(2.80)
+                                .build();
+
+                ByteString audioBytes = this.audioService.textToSpeech(textToSpeech);
+
+                this.fileService.createFile(audioBytes.toByteArray(), sentence.getAudioPath());
+            } catch (Exception e){
+                erroOcorrido.set(true);  // Marca que houve erro
+                log.error("Erro ao processar a sentença: " + sentence.getText(), e);
+            }
+        });
+
+        if (erroOcorrido.get()) {
+            throw new RuntimeException("Erro ocorrido durante o processamento. Interrompendo a aplicação.");
+        }
     }
 
     private void handleVideo(){
@@ -468,5 +487,21 @@ public class VideoWithImages extends VideoTemplate {
 
     public void setDirectoryPath(String directoryPath) {
         this.directoryPath = directoryPath;
+    }
+
+    public String getDirectoryPathTxt() {
+        return directoryPathTxt;
+    }
+
+    public void setDirectoryPathTxt(String directoryPathTxt) {
+        this.directoryPathTxt = directoryPathTxt;
+    }
+
+    public String getDirectoryPathMidia() {
+        return directoryPathMidia;
+    }
+
+    public void setDirectoryPathMidia(String directoryPathMidia) {
+        this.directoryPathMidia = directoryPathMidia;
     }
 }

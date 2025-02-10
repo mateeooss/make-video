@@ -15,28 +15,23 @@ import java.io.IOException;
 public class AudioService {
     @Value("${google.apikey}")
     private String googleApiKey;
+    private final TextToSpeechSettings settings;
 
-    public void textToSpeech(TextToSpeech textToSpeech){
-        // Caminho para o arquivo credentials.json
-        String credentialsPath = "src/main/resources/googleCredentials/snappy-photon-447902-c6-f933c797ef90.json"; // Caminho relativo ou absoluto
-
-        // Variável efetivamente final para as credenciais
-        final GoogleCredentials credentials;
-        TextToSpeechSettings settings;
-        try {
-            credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsPath));
-            // Configura o cliente do Text-to-Speech
-            settings = TextToSpeechSettings.newBuilder()
-                    .setCredentialsProvider(() -> credentials) // Agora a variável é efetivamente final
+    public AudioService() {
+        try (FileInputStream credentialsStream = new FileInputStream("src/main/resources/googleCredentials/snappy-photon-447902-c6-f933c797ef90.json")) {
+            GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+            this.settings = TextToSpeechSettings.newBuilder()
+                    .setCredentialsProvider(() -> credentials)
                     .build();
         } catch (IOException e) {
             throw new RuntimeException("Erro ao carregar credenciais", e);
         }
+    }
 
+    public ByteString textToSpeech(TextToSpeech textToSpeech) {
         // Instancia o cliente
         try (TextToSpeechClient textToSpeechClient = TextToSpeechClient.create(settings)) {
             // Define o texto de entrada
-
             SynthesisInput input =
                 textToSpeech.SSML() ? SynthesisInput.newBuilder().setSsml(textToSpeech.text()).build()
                                     : SynthesisInput.newBuilder().setText(textToSpeech.text()).build();
@@ -60,10 +55,11 @@ public class AudioService {
 
             // Salva o áudio em um arquivo
             ByteString audioContents = response.getAudioContent();
-            try (FileOutputStream out = new FileOutputStream("output.mp3")) {
-                out.write(audioContents.toByteArray());
-                System.out.println("Áudio salvo em output.mp3");
-            }
+            return audioContents;
+//            try (FileOutputStream out = new FileOutputStream("output.mp3")) {
+//                out.write(audioContents.toByteArray());
+//                System.out.println("Áudio salvo em output.mp3");
+//            }
         } catch (IOException e) {
             throw new RuntimeException("Erro ao sintetizar fala", e);
         }
