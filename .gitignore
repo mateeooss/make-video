@@ -16,6 +16,9 @@ src/main/resources/*.env
 # tirando credencials do google
 src/main/resources/googleCredentials/snappy-photon-447902-c6-f933c797ef90.json
 
+#removendo ffmpeg
+src/main/resources/ffmpeg
+
 ### STS ###
 .apt_generated
 .classpath
